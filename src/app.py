@@ -16,7 +16,6 @@ class Application(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("Adaptive Audiogram")
-        self.geometry("800x600")
     
         # Container to stack frames
         self.container = tk.Frame(self)
@@ -28,16 +27,27 @@ class Application(tk.Tk):
         # Initialize all frames
         for F in (MainMenu, TestMode, TrainMode, CalibrationMode):
             frame = F(self.container, self)
-            print(f"Initializing frame: {F.__name__}, widget path: {str(frame)}")
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
             
         # Start with Main Menu    
-        self.show_frame(MainMenu)
+        self.show_main_menu()
                   
-    def show_frame(self, screen_class) -> None:
-        frame = self.frames[screen_class]
-        frame.tkraise() # Bring chosen frame to front
+    def show_main_menu(self) -> None:
+        """Show the main menu."""
+        self.frames[MainMenu].tkraise()
+
+    def show_test_mode(self) -> None:
+        """Show the test mode."""
+        self.frames[TestMode].tkraise()
+
+    def show_train_mode(self) -> None:
+        """Show the training mode."""
+        self.frames[TrainMode].tkraise()
+
+    def show_calibration_mode(self) -> None:
+        """Show the calibration mode."""
+        self.frames[CalibrationMode].tkraise()
             
 if __name__ == '__main__':
     main()
