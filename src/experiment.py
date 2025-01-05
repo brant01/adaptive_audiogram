@@ -11,28 +11,34 @@ class Experiment():
     """
     Experiment class
     """
-    def __init__(self, type: TrialType) -> None:
+    def __init__(self, type: TrialType, patient_id: int) -> None:
         self.type = type
+        self.stop_test = False # Flag for ending test
+        self.patient_id = patient_id
     
     def play_sound(self) -> None:
         
         sound = self.select_sound()
         
-        t = np.linspace(0, sound.duration, int(sound.sample_rate * sound.duration), endpoint=False)  # Time array
-        signal = sound.volume * np.sin(2 * np.pi * sound.frequency * t)  # Sine wave
-        
-        sd.play(signal, samplerate=sound.sample_rate)
-        sd.wait()
+        sd.play(sound.signal, samplerate=sound.sample_rate)
+        #sd.wait()
     
     def select_sound(self) -> Sound:
-        return Sound(
+        
+        sound = Sound(
             duration=1,
             frequency=1000,
             volume=0.5,
             ear=Ear.LEFT,
-            sample_rate=44100
+            sample_rate=44100,
+            signal=None
         )
-    
+        
+        t = np.linspace(0, sound.duration, int(sound.sample_rate * sound.duration), endpoint=False)  # Time array
+        sound.signal = sound.volume * np.sin(2 * np.pi * sound.frequency * t)  # Sine wave
+        
+        return sound
+        
     def record(self, decision: Decision) -> None:
         print(f"Recording decision: {decision.name}")
         return None

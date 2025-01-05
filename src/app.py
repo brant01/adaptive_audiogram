@@ -24,6 +24,7 @@ class Application(tk.Tk):
         # Dictionary to store frames
         self.frames = {}
         
+        
         # Initialize all frames
         for F in (MainMenu, TestMode, TrainMode, CalibrationMode):
             frame = F(self.container, self)
@@ -32,6 +33,7 @@ class Application(tk.Tk):
             
         # Start with Main Menu    
         self.show_main_menu()
+        
                   
     def show_main_menu(self) -> None:
         """Show the main menu."""
