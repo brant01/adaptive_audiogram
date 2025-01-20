@@ -1,11 +1,11 @@
 import tkinter as tk
 
-from main_menu import MainMenu
-from testing import TestMode
-from training import TrainMode
-from calibrate import CalibrationMode
+from src.gui.main_menu import MainMenu
+from src.gui.testing import TestMode
+from src.gui.training import TrainMode
+from src.gui.calibrate import CalibrationMode
 
-def main() -> None:
+def start_app() -> None:
     app = Application()
     app.mainloop()
             
@@ -52,4 +52,4 @@ class Application(tk.Tk):
         self.frames[CalibrationMode].tkraise()
             
 if __name__ == '__main__':
-    main()
+    start_app

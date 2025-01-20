@@ -1,7 +1,7 @@
 import tkinter as tk
 
-from testing import TestMode
-from enums import  TrialType
+from src.gui.testing import TestMode
+from src.utils.enums import  TrialType
 
 class TrainMode(TestMode):
     """

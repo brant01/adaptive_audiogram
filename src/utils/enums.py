@@ -1,6 +1,6 @@
 from enum import Enum
 
-class Decision(Enum):
+class Response(Enum):
     """
     Decision class
     """
@@ -11,6 +11,9 @@ class Ear(Enum):
     LEFT = 1
     RIGHT = 2
     BOTH = 3
+    
+class ModelType(Enum):
+    Bayesian = 0
 
 class TrialType(Enum):
     """
