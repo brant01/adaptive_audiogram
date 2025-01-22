@@ -11,10 +11,13 @@ class Ear(Enum):
     LEFT = 1
     RIGHT = 2
     BOTH = 3
-    
-class ModelType(Enum):
-    Bayesian = 0
 
+class ModelType(Enum):
+    """
+    Model type class
+    """
+    Bayesian = 0
+    
 class TrialType(Enum):
     """
     Trial type class

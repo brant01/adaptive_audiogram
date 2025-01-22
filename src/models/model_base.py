@@ -4,12 +4,12 @@ from src.utils.enums import Response
 from src.sound_utils.sound import Sound
 
 class AdaptiveModel(ABC):
-    def __init__(self, threshold: int = 5):
+    def __init__(self, threshold: int = 1):
         """
         Base class for adaptive models.
 
         Args:
-            threshold (int): Stopping criterion for uncertainty (default = 5 dB).
+            threshold (int): Stopping criterion for uncertainty (default = 2 dB).
         """
         self.threshold = threshold
         self.sound = None
@@ -27,7 +27,7 @@ class AdaptiveModel(ABC):
         return self.sound
 
     @property
-    def results(self):
+    def results(self) -> list[dict]:
         """
         Returns the final thresholds for each frequency and ear.
 
