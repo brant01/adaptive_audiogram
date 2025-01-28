@@ -4,6 +4,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 AUDIOGRAM_FILE_PATH = PROJECT_ROOT / "data" / "anonymized_cleaned_data.parquet"
 
+# Path to simulation file folder for testing
+SIMULATION_FILE_PATH = PROJECT_ROOT / "simulation_files"
+
 # Frequencies in Hz per ear, left then right
 
 FREQUENCIES = [250, 500, 1000, 2000, 4000, 8000]  # Hz

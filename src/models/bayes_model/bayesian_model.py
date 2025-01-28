@@ -11,7 +11,7 @@ class BayesianAdaptiveModel(AdaptiveModel):
     """
     Bayesian adaptive model for audiology testing.
     """
-    def __init__(self, threshold: int = 1):
+    def __init__(self, threshold: int = 1, alpha: float = 0.3):
         """
         Initializes the BayesianAdaptiveModel with default means and covariance matrix.
 
@@ -27,6 +27,7 @@ class BayesianAdaptiveModel(AdaptiveModel):
         
         self.sound = self._select_next_sound() # initial sound selection from baseline mean/cov matrix
         self.stop_flag = False # when all uncertainties are below threshold
+        self.alpha = alpha # psychometric function slope
     
 
     def _select_next_sound(self) -> Sound:
@@ -56,13 +57,12 @@ class BayesianAdaptiveModel(AdaptiveModel):
         freq_idx = self.last_tested_index
         
         # Do the EKF/Bayesian update (using freq_idx, self.sound.volume, etc.)
-        self.means, self.cov_matrix = BayesianAdaptiveModel.ekf_update_yes_no(
+        self.means, self.cov_matrix = self.ekf_update_yes_no(
             self.means,
             self.cov_matrix,
             freq_idx,
             self.sound.volume,
             response,
-            alpha=0.2
         )
 
         # Log it
@@ -84,7 +84,7 @@ class BayesianAdaptiveModel(AdaptiveModel):
         if not self.stop_flag:
             self.sound = self._select_next_sound()
 
-    def get_results(self):
+    def get_results(self) -> dict:
         """
         Returns the final thresholds for each frequency and ear.
         Rounds/clamps each threshold to the nearest 5 dB within [-20, 120].
@@ -97,7 +97,8 @@ class BayesianAdaptiveModel(AdaptiveModel):
             for m in self.means
         ]
         
-        return list(zip(labels, rounded_means))
+        # Combine into a dictionary
+        return {label: mean for label, mean in zip(labels, rounded_means)}
 
     def get_detailed_info(self):
         """
@@ -120,12 +121,11 @@ class BayesianAdaptiveModel(AdaptiveModel):
     def _sigmoid(z):
         return 1.0 / (1.0 + np.exp(-z))
 
-    @staticmethod
-    def _psychometric_probability(volume, threshold, alpha=0.2):
-        s = BayesianAdaptiveModel._sigmoid(alpha * (volume - threshold))
+    def _psychometric_probability(self, volume, threshold):
+        s = self._sigmoid(self.alpha * (volume - threshold))
         return s
         
-    def ekf_update_yes_no(mu, Sigma, i, volume, response, alpha=0.2):
+    def ekf_update_yes_no(self, mu, Sigma, i, volume, response):
         """
         mu:    (D,) current mean
         Sigma: (D,D) current covariance
@@ -139,11 +139,11 @@ class BayesianAdaptiveModel(AdaptiveModel):
         D = len(mu)
 
         # Predicted probability of yes at the current mean
-        p_yes = BayesianAdaptiveModel._psychometric_probability(volume, mu[i], alpha=alpha)
+        p_yes = self._psychometric_probability(volume, mu[i])
 
         # Jacobian: derivative of h wrt dimension i
         # h(\theta_i) = p_yes => derivative = -alpha * p_yes * (1 - p_yes)
-        dh_dtheta_i = -alpha * p_yes * (1.0 - p_yes)
+        dh_dtheta_i = -self.alpha * p_yes * (1.0 - p_yes)
 
         # H is 1 x D, all zeros except H[0, i] = dh_dtheta_i
         H = np.zeros((1, D))
