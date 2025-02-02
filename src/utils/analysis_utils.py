@@ -49,10 +49,13 @@ def load_json_to_tidy_polars(json_file: str) -> pl.DataFrame:
     tidy_df = pl.DataFrame(tidy_rows)
     
     # Get the threshold from the end of the file name between thr and .json
-    threshold = extract_threshold_from_filename(json_file)
+    stop_threshold, alpha = extract_threshold_alpha_from_filename(json_file)
     
     # Add a column for the threshold
-    tidy_df = tidy_df.with_columns(pl.lit(int(threshold)).alias("threshold"))
+    tidy_df = tidy_df.with_columns(
+        pl.lit(int(stop_threshold)).alias("stop_threshold"),
+        pl.lit(float(alpha)).alias("alpha"),
+        )
     return tidy_df
 
 
@@ -96,21 +99,40 @@ def load_folder_jsons_to_polars(
     # Concatenate them vertically
     combined_df = pl.concat(dfs, how="vertical")
     
-    combined_df = combined_df.sort("threshold")
+    combined_df = combined_df.sort("stop_threshold")
 
     return combined_df
 
-def extract_threshold_from_filename(file_str: str) -> int:
-    # e.g., file_str = "../simulation_files/20250127_BayesianAdaptiveModel_thr1.json"
-    # Let's just pull the actual filename portion from the path
+
+def extract_threshold_alpha_from_filename(file_str: str) -> tuple[int, float]:
+    """
+    Extracts stop_threshold and alpha values from a given filename.
+
+    Args:
+        file_str (str): The filename string.
+
+    Returns:
+        dict: A dictionary containing 'stop_threshold' (int) and 'alpha' (float).
+    
+    Example:
+        file_str = "20250128_BayesianAdaptiveModel_alph0.2_thr2.json"
+        Returns: {'stop_threshold': 2, 'alpha': 0.2}
+    """
+    # Extract the filename from the path
     file_name = file_str.split("/")[-1]  # or use os.path.basename(file_str)
     
-    pattern = r"_thr(\d+)\.json$"
+    # Updated pattern to match both alpha and threshold values
+    pattern = r"_alph([\d\.]+)_thr(\d+)\.json$"
     match = re.search(pattern, file_name)
-    if not match:
-        raise ValueError(f"File name does not match the pattern '_thr<number>.json': {file_name}")
     
-    return int(match.group(1))
+    if not match:
+        raise ValueError(f"File name does not match the expected pattern: {file_name}")
+    
+    # Extract values and convert to correct types
+    alpha = float(match.group(1))   # Extracts '0.2' as float
+    stop_threshold = int(match.group(2))  # Extracts '2' as int
+
+    return stop_threshold, alpha
 
 def plot_violin_threshold_error(df):
     """
@@ -120,7 +142,7 @@ def plot_violin_threshold_error(df):
     """
 
     # 1) Extract unique thresholds in ascending order
-    unique_thresholds = sorted(df['threshold'].unique())
+    unique_thresholds = sorted(df['stop_threshold'].unique())
 
     # 2) Group threshold_error by threshold
     grouped_errors = []
@@ -128,9 +150,9 @@ def plot_violin_threshold_error(df):
         # Filter rows matching this threshold
         # Adjust syntax depending on Polars vs. pandas
         if hasattr(df, "filter"):  # Polars
-            errors_for_thr = df.filter(df['threshold'] == thr)['threshold_error'].to_list()
+            errors_for_thr = df.filter(df['stop_threshold'] == thr)['threshold_error'].to_list()
         else:  # pandas
-            errors_for_thr = df.loc[df['threshold'] == thr, 'threshold_error'].tolist()
+            errors_for_thr = df.loc[df['stop_threshold'] == thr, 'threshold_error'].tolist()
         
         grouped_errors.append(errors_for_thr)
 
@@ -143,9 +165,9 @@ def plot_violin_threshold_error(df):
     ax.set_xticks(range(1, len(unique_thresholds) + 1))
     ax.set_xticklabels(unique_thresholds)
 
-    ax.set_xlabel("Threshold")
+    ax.set_xlabel("Stopping Threshold")
     ax.set_ylabel("Threshold Error")
-    ax.set_title("Violin Plot of Threshold Error by Threshold")
+    ax.set_title("Violin Plot of Threshold Error by Stopping Threshold")
 
     plt.show()
     
@@ -157,18 +179,18 @@ def plot_violin_setps_threshold(df):
         df (pl.DataFrame or pd.DataFrame): Must have 'threshold' and 'threshold_error' columns.
     """
 
-    # 1) Extract unique thresholds in ascending order
-    unique_thresholds = sorted(df['threshold'].unique())
+    # 1) Extract unique stopping thresholds in ascending order
+    unique_thresholds = sorted(df['stop_threshold'].unique())
 
-    # 2) Group threshold_error by threshold
+    # 2) Group threshold_error by stopping threshold
     grouped_errors = []
     for thr in unique_thresholds:
         # Filter rows matching this threshold
         # Adjust syntax depending on Polars vs. pandas
         if hasattr(df, "filter"):  # Polars
-            errors_for_thr = df.filter(df['threshold'] == thr)['steps'].to_list()
+            errors_for_thr = df.filter(df['stop_threshold'] == thr)['steps'].to_list()
         else:  # pandas
-            errors_for_thr = df.loc[df['threshold'] == thr, 'steps'].tolist()
+            errors_for_thr = df.loc[df['stop_threshold'] == thr, 'steps'].tolist()
         
         grouped_errors.append(errors_for_thr)
 
@@ -181,9 +203,9 @@ def plot_violin_setps_threshold(df):
     ax.set_xticks(range(1, len(unique_thresholds) + 1))
     ax.set_xticklabels(unique_thresholds)
 
-    ax.set_xlabel("Threshold")
+    ax.set_xlabel("Stopping Threshold")
     ax.set_ylabel("Number of Steps")
-    ax.set_title("Violin Plot of Number of Steps by Threshold")
+    ax.set_title("Violin Plot of Number of Steps by Stopping Threshold")
 
     plt.show()
     

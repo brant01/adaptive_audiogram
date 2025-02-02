@@ -15,8 +15,7 @@ from src.utils.enums import Response
 
 class SimulationBase:
     def __init__(self, model_class: AdaptiveModel, 
-                 threshold: int = 5,
-                 alpha: float = 0.3):
+                 **model_params: dict):
         """
         Base class for simulations.
 
@@ -25,15 +24,14 @@ class SimulationBase:
             threshold (int): Stopping criterion for uncertainty (default: 5 dB).
         """
         self.model_class = model_class
-        self.threshold = threshold
-        self.alpha = alpha
+        self.model_params = model_params
         self.model = None  # Placeholder for the model instance
 
     def initialize_model(self):
         """Initializes the model instance."""
         if not self.model_class:
             raise ValueError("Model class not provided.")
-        self.model = self.model_class(threshold=self.threshold, alpha=self.alpha)
+        self.model = self.model_class(**self.model_params)
 
     @staticmethod
     def psychometric_response(loudness: float, threshold: int, slope: float = 4.0) -> Response:
@@ -105,6 +103,12 @@ class ManualSimulation(SimulationBase):
 
 
 class AutomatedSimulation(SimulationBase):
+    def __init__(self, model_class: type[AdaptiveModel], **model_params):
+        """
+        AutomatedSimulation can take arbitrary model params and pass them to SimulationBase.
+        """
+        super().__init__(model_class, **model_params)
+        
     def run_model(self, 
                   patient_data_file: Path = AUDIOGRAM_FILE_PATH, 
                   output_folder: Path = SIMULATION_FILE_PATH,

@@ -7,13 +7,13 @@ def main():
     start_app()
 
 def manual_sim_bayes():
-    simulation = ManualSimulation(BayesianAdaptiveModel, threshold=4)
+    simulation = ManualSimulation(BayesianAdaptiveModel, stop_threshold=4)
     
     simulation.run_model()
     
 def auto_sim_bayes():
     # Initialize the automated simulation
-    automated_sim = AutomatedSimulation(model_class=BayesianAdaptiveModel, threshold=5)
+    automated_sim = AutomatedSimulation(model_class=BayesianAdaptiveModel, stop_threshold=5)
 
     # Run the simulation on the dataset
     automated_sim.run_model()
